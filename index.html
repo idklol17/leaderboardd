@@ -3,62 +3,172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Firebase Leaderboard</title>
+    <title>Firebase Clicker Game & Leaderboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
+        /* General body styling */
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%); /* Light blue gradient */
+            padding: 20px;
+            box-sizing: border-box;
+            color: #333;
+        }
+
+        /* Main application container */
+        .app-container {
+            background-color: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            text-align: center;
+            max-width: 95%;
+            width: 700px; /* Wider to accommodate both sections */
+            box-sizing: border-box;
+            position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px;
-            background-color: #f0f2f5;
-            color: #333;
         }
-        .container {
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            max-width: 600px;
-            width: 100%;
-            margin-bottom: 20px;
-        }
-        h1, h2 {
+
+        h1 {
             color: #2c3e50;
             margin-bottom: 20px;
-            text-align: center;
+            font-size: 2.8em;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
         }
+
+        /* Section styling */
+        .section {
+            background-color: #f8f8f8;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 20px; /* Space between sections */
+        }
+
+        .section:last-child {
+            margin-bottom: 0; /* No margin after the last section */
+        }
+
+        .section h2 {
+            color: #555;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        /* Clicker Game Specific Styles */
+        .score-display {
+            font-size: 3em;
+            font-weight: bold;
+            color: #3498db; /* Blue for score */
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+        }
+
+        #clickButton {
+            background: linear-gradient(45deg, #2ecc71 0%, #27ae60 100%); /* Green gradient */
+            color: white;
+            border: none;
+            padding: 30px 60px; /* Large button */
+            font-size: 2.5em;
+            font-weight: bold;
+            border-radius: 50%; /* Circular button */
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            transition: all 0.1s ease-out;
+            outline: none;
+            user-select: none; /* Prevent text selection on click */
+            animation: pulse 1.5s infinite alternate; /* Subtle pulse animation */
+        }
+
+        #clickButton:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        #clickButton:active {
+            transform: scale(0.98);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(45deg, #27ae60 0%, #2ecc71 100%); /* Invert gradient on active */
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.02); }
+        }
+
         .input-group {
+            margin-top: 30px; /* Space above name input */
             margin-bottom: 15px;
-            display: flex;
-            flex-direction: column;
+            text-align: left;
         }
+
         .input-group label {
+            display: block;
             margin-bottom: 5px;
             font-weight: bold;
-            color: #555;
+            color: #666;
+            font-size: 0.9em;
         }
-        .input-group input {
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+
+        .input-group input[type="text"] {
+            width: calc(100% - 20px);
+            padding: 12px 10px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
             font-size: 1em;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+            transition: border-color 0.3s ease;
         }
-        button {
-            background-color: #4CAF50;
+
+        .input-group input[type="text"]:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+
+        #submitScoreBtn {
+            background: linear-gradient(45deg, #3498db 0%, #2980b9 100%); /* Blue gradient */
             color: white;
-            padding: 12px 20px;
             border: none;
-            border-radius: 5px;
-            cursor: pointer;
+            padding: 12px 25px;
             font-size: 1.1em;
-            transition: background-color 0.3s ease;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            outline: none;
             width: 100%;
             box-sizing: border-box;
         }
-        button:hover {
-            background-color: #45a049;
+
+        #submitScoreBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
         }
+
+        #submitScoreBtn:active {
+            transform: translateY(0);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        #localMessage { /* Renamed from #message to avoid conflict */
+            margin-top: 15px;
+            font-size: 1em;
+            font-weight: bold;
+            color: #e74c3c; /* Red for errors */
+        }
+
+        /* Leaderboard Specific Styles */
         #leaderboard {
             list-style: none;
             padding: 0;
@@ -78,43 +188,111 @@
         #leaderboard li strong {
             color: #3498db;
         }
-        #message {
-            color: red;
-            margin-top: 10px;
+
+        /* Global Message Box Styling */
+        .global-message-box { /* Renamed from .message-box to avoid conflict */
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 25px 35px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            display: none;
+            font-size: 1.2em;
+            font-weight: bold;
             text-align: center;
+            animation: fadeIn 0.3s ease-out;
+            pointer-events: none;
+            max-width: 80%;
+            box-sizing: border-box;
+        }
+
+        .global-message-box.show {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, -60%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .app-container {
+                padding: 20px;
+                width: 100%; /* Full width on smaller screens */
+            }
+            h1 {
+                font-size: 2.2em;
+            }
+            .section {
+                padding: 20px;
+            }
+            .section h2 {
+                font-size: 1.5em;
+            }
+            .score-display {
+                font-size: 2.5em;
+            }
+            #clickButton {
+                padding: 25px 50px;
+                font-size: 2em;
+            }
+            .input-group input[type="text"] {
+                padding: 10px;
+                font-size: 0.9em;
+            }
+            #submitScoreBtn {
+                padding: 10px 20px;
+                font-size: 1em;
+            }
+            #leaderboard li {
+                font-size: 1em;
+                padding: 12px;
+            }
+            .global-message-box {
+                font-size: 1em;
+                padding: 15px 25px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Game Leaderboard</h1>
+    <div class="app-container">
+        <h1>Clicker Challenge</h1>
 
-        <h2>Submit Your Score</h2>
-        <div class="input-group">
-            <label for="playerName">Your Name:</label>
-            <input type="text" id="playerName" placeholder="Enter your name" maxlength="20">
+        <div class="section game-section">
+            <h2>Your Game</h2>
+            <div id="scoreDisplay" class="score-display">0</div>
+            <button id="clickButton">CLICK ME!</button>
+
+            <div class="input-group">
+                <label for="playerName">Your Name:</label>
+                <input type="text" id="playerName" placeholder="Enter your name" maxlength="20">
+            </div>
+            <button id="submitScoreBtn">Submit Score</button>
+            <p id="localMessage"></p>
         </div>
-        <div class="input-group">
-            <label for="playerScore">Your Score:</label>
-            <input type="number" id="playerScore" placeholder="Enter your score">
+
+        <div class="section leaderboard-section">
+            <h2>Top Scores</h2>
+            <ul id="leaderboard">
+                <li>Loading leaderboard...</li>
+            </ul>
         </div>
-        <button id="submitScoreBtn">Submit Score</button>
-        <p id="message"></p>
     </div>
 
-    <div class="container">
-        <h2>Top Scores</h2>
-        <ul id="leaderboard">
-            <li>Loading leaderboard...</li>
-        </ul>
-    </div>
+    <div id="globalMessageBox" class="global-message-box"></div>
 
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
     <script>
-        // Your Firebase config from Step 2
-        // REPLACE WITH YOUR ACTUAL FIREBASE CONFIG!
+        // Your Firebase config (from your leaderboard project)
         const firebaseConfig = {
           apiKey: "AIzaSyBjAafMn_OKsxPioamRpvmodPgxEYPgjWM",
           authDomain: "mygameleaderboard-d6ac4.firebaseapp.com",
@@ -131,54 +309,94 @@
         // Get a reference to the Firestore database service
         const db = firebase.firestore();
 
-        // Get DOM elements
+        // Game DOM Elements
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const clickButton = document.getElementById('clickButton');
         const playerNameInput = document.getElementById('playerName');
-        const playerScoreInput = document.getElementById('playerScore');
         const submitScoreBtn = document.getElementById('submitScoreBtn');
+        const localMessageDisplay = document.getElementById('localMessage'); // For local messages
+        const globalMessageBox = document.getElementById('globalMessageBox'); // For global pop-up messages
+
+        // Leaderboard DOM Elements
         const leaderboardList = document.getElementById('leaderboard');
-        const messageDisplay = document.getElementById('message');
 
-        /**
-         * Submits a new score to the Firestore 'scores' collection.
-         */
-        async function submitScore() {
-            const name = playerNameInput.value.trim();
-            const score = parseInt(playerScoreInput.value);
+        // Game State
+        let score = 0;
+        const clicksPerClick = 1;
 
-            if (!name) {
-                showMessage("Please enter your name.");
-                return;
-            }
-            if (isNaN(score) || score < 0) {
-                showMessage("Please enter a valid positive score.");
-                return;
-            }
-            if (name.length > 20) { // Enforce client-side limit matching rules
-                showMessage("Name cannot be longer than 20 characters.");
-                return;
-            }
-
-            try {
-                // Add a new document with a generated ID
-                await db.collection("scores").add({
-                    name: name,
-                    score: score,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp() // Use server timestamp for fair ordering
-                });
-
-                showMessage("Score submitted successfully!", "green"); // Green for success
-                playerNameInput.value = ''; // Clear input fields
-                playerScoreInput.value = '';
-            } catch (error) {
-                console.error("Error adding document: ", error);
-                showMessage(`Error submitting score: ${error.message}`, "red");
+        // Function to display temporary messages to the user (global message box)
+        function showGlobalMessage(message, duration = 2000) {
+            globalMessageBox.textContent = message;
+            globalMessageBox.classList.add('show');
+            if (duration > 0) {
+                setTimeout(() => {
+                    globalMessageBox.classList.remove('show');
+                }, duration);
             }
         }
 
-        /**
-         * Fetches and displays the top scores from Firestore.
-         * Uses onSnapshot for real-time updates.
-         */
+        // Function to display messages within the submit section
+        function showLocalMessage(msg, color = "red", duration = 3000) {
+            localMessageDisplay.textContent = msg;
+            localMessageDisplay.style.color = color;
+            clearTimeout(localMessageDisplay.timeout);
+            localMessageDisplay.timeout = setTimeout(() => {
+                localMessageDisplay.textContent = '';
+            }, duration);
+        }
+
+        // --- Clicker Game Logic ---
+        function handleClick() {
+            score += clicksPerClick;
+            scoreDisplay.textContent = score;
+        }
+
+        // --- Firebase Submission Logic ---
+        async function submitScoreToLeaderboard() {
+            const name = playerNameInput.value.trim();
+            const currentScore = score; // Use the current game score
+
+            if (!name) {
+                showLocalMessage("Please enter your name.");
+                return;
+            }
+            if (currentScore <= 0) {
+                showLocalMessage("Score must be greater than 0 to submit.");
+                return;
+            }
+            if (name.length > 20) { // Enforce client-side limit matching rules
+                showLocalMessage("Name cannot be longer than 20 characters.");
+                return;
+            }
+
+            // Disable button to prevent multiple submissions
+            submitScoreBtn.disabled = true;
+            showLocalMessage("Submitting score...", "orange", 0); // Indefinite message
+
+            try {
+                await db.collection("scores").add({
+                    name: name,
+                    score: currentScore,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                showLocalMessage("Score submitted successfully!", "green");
+                playerNameInput.value = ''; // Clear name input
+                score = 0; // Reset score after submission (optional, but common for clickers)
+                scoreDisplay.textContent = score;
+                showGlobalMessage("Score submitted! Leaderboard updating...", 4000);
+                loadLeaderboard(); // Refresh the leaderboard after submission
+
+            } catch (error) {
+                console.error("Error adding document: ", error);
+                showLocalMessage(`Error: ${error.message}. Score not submitted.`, "red");
+                showGlobalMessage("Submission failed! Check console.", 4000);
+            } finally {
+                submitScoreBtn.disabled = false; // Re-enable button
+            }
+        }
+
+        // --- Leaderboard Logic ---
         function loadLeaderboard() {
             // Fetch all scores without server-side ordering to avoid index errors.
             // Sorting and limiting will be done client-side.
@@ -221,27 +439,20 @@
               }, (error) => {
                   console.error("Error loading leaderboard: ", error);
                   leaderboardList.innerHTML = '<li>Error loading leaderboard. Please try again.</li>';
-                  showMessage(`Failed to load leaderboard: ${error.message}`, "red");
+                  showGlobalMessage(`Failed to load leaderboard: ${error.message}`, 5000);
               });
         }
 
-        /**
-         * Helper function to display temporary messages.
-         */
-        function showMessage(msg, color = "red", duration = 3000) {
-            messageDisplay.textContent = msg;
-            messageDisplay.style.color = color;
-            clearTimeout(messageDisplay.timeout); // Clear previous timeout
-            messageDisplay.timeout = setTimeout(() => {
-                messageDisplay.textContent = '';
-            }, duration);
-        }
+        // --- Event Listeners ---
+        clickButton.addEventListener('click', handleClick);
+        submitScoreBtn.addEventListener('click', submitScoreToLeaderboard);
 
-        // Event Listeners
-        submitScoreBtn.addEventListener('click', submitScore);
-
-        // Initial load of the leaderboard when the page loads
-        document.addEventListener('DOMContentLoaded', loadLeaderboard);
+        // Initial setup on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            scoreDisplay.textContent = score; // Display initial score
+            loadLeaderboard(); // Load the leaderboard
+            showGlobalMessage("Welcome! Click to earn points and submit your score!", 3000);
+        });
     </script>
 </body>
 </html>
