@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Leaderboard</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        h1, h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .input-group {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+        .input-group label {
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        .input-group input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: background-color 0.3s ease;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #leaderboard {
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+        #leaderboard li {
+            background-color: #e9ecef;
+            margin-bottom: 10px;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.1em;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        #leaderboard li strong {
+            color: #3498db;
+        }
+        #message {
+            color: red;
+            margin-top: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Game Leaderboard</h1>
+
+        <h2>Submit Your Score</h2>
+        <div class="input-group">
+            <label for="playerName">Your Name:</label>
+            <input type="text" id="playerName" placeholder="Enter your name" maxlength="20">
+        </div>
+        <div class="input-group">
+            <label for="playerScore">Your Score:</label>
+            <input type="number" id="playerScore" placeholder="Enter your score">
+        </div>
+        <button id="submitScoreBtn">Submit Score</button>
+        <p id="message"></p>
+    </div>
+
+    <div class="container">
+        <h2>Top Scores</h2>
+        <ul id="leaderboard">
+            <li>Loading leaderboard...</li>
+        </ul>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Your Firebase config from Step 2
+        // REPLACE WITH YOUR ACTUAL FIREBASE CONFIG!
+        const firebaseConfig = {
+          apiKey: "AIzaSyBjAafMn_OKsxPioamRpvmodPgxEYPgjWM",
+          authDomain: "mygameleaderboard-d6ac4.firebaseapp.com",
+          projectId: "mygameleaderboard-d6ac4",
+          storageBucket: "mygameleaderboard-d6ac4.firebasestorage.app",
+          messagingSenderId: "243122927960",
+          appId: "1:243122927960:web:15349fa9e8021c23538d2d",
+          measurementId: "G-858879R227"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        // Get a reference to the Firestore database service
+        const db = firebase.firestore();
+
+        // Get DOM elements
+        const playerNameInput = document.getElementById('playerName');
+        const playerScoreInput = document.getElementById('playerScore');
+        const submitScoreBtn = document.getElementById('submitScoreBtn');
+        const leaderboardList = document.getElementById('leaderboard');
+        const messageDisplay = document.getElementById('message');
+
+        /**
+         * Submits a new score to the Firestore 'scores' collection.
+         */
+        async function submitScore() {
+            const name = playerNameInput.value.trim();
+            const score = parseInt(playerScoreInput.value);
+
+            if (!name) {
+                showMessage("Please enter your name.");
+                return;
+            }
+            if (isNaN(score) || score < 0) {
+                showMessage("Please enter a valid positive score.");
+                return;
+            }
+            if (name.length > 20) { // Enforce client-side limit matching rules
+                showMessage("Name cannot be longer than 20 characters.");
+                return;
+            }
+
+            try {
+                // Add a new document with a generated ID
+                await db.collection("scores").add({
+                    name: name,
+                    score: score,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp() // Use server timestamp for fair ordering
+                });
+
+                showMessage("Score submitted successfully!", "green"); // Green for success
+                playerNameInput.value = ''; // Clear input fields
+                playerScoreInput.value = '';
+            } catch (error) {
+                console.error("Error adding document: ", error);
+                showMessage(`Error submitting score: ${error.message}`, "red");
+            }
+        }
+
+        /**
+         * Fetches and displays the top scores from Firestore.
+         * Uses onSnapshot for real-time updates.
+         */
+        function loadLeaderboard() {
+            // Fetch all scores without server-side ordering to avoid index errors.
+            // Sorting and limiting will be done client-side.
+            db.collection("scores")
+              .onSnapshot((snapshot) => { // Listen for real-time updates
+                  leaderboardList.innerHTML = ''; // Clear existing list
+                  if (snapshot.empty) {
+                      leaderboardList.innerHTML = '<li>No scores yet. Be the first!</li>';
+                      return;
+                  }
+
+                  // Convert snapshot to an array of data objects
+                  const allScores = [];
+                  snapshot.forEach((doc) => {
+                      allScores.push(doc.data());
+                  });
+
+                  // Sort the scores client-side
+                  allScores.sort((a, b) => {
+                      // Primary sort: by score in descending order
+                      if (b.score !== a.score) {
+                          return b.score - a.score;
+                      }
+                      // Secondary sort: by timestamp in descending order (most recent first for ties)
+                      // Ensure timestamp exists before comparing, handle null/undefined
+                      const timestampA = a.timestamp ? a.timestamp.toDate().getTime() : 0;
+                      const timestampB = b.timestamp ? b.timestamp.toDate().getTime() : 0;
+                      return timestampB - timestampA;
+                  });
+
+                  // Take only the top 10 scores
+                  const topScores = allScores.slice(0, 10);
+
+                  // Display the sorted and limited scores
+                  topScores.forEach((data) => {
+                      const listItem = document.createElement('li');
+                      listItem.innerHTML = `<span>${data.name}</span><strong>${data.score}</strong>`;
+                      leaderboardList.appendChild(listItem);
+                  });
+              }, (error) => {
+                  console.error("Error loading leaderboard: ", error);
+                  leaderboardList.innerHTML = '<li>Error loading leaderboard. Please try again.</li>';
+                  showMessage(`Failed to load leaderboard: ${error.message}`, "red");
+              });
+        }
+
+        /**
+         * Helper function to display temporary messages.
+         */
+        function showMessage(msg, color = "red", duration = 3000) {
+            messageDisplay.textContent = msg;
+            messageDisplay.style.color = color;
+            clearTimeout(messageDisplay.timeout); // Clear previous timeout
+            messageDisplay.timeout = setTimeout(() => {
+                messageDisplay.textContent = '';
+            }, duration);
+        }
+
+        // Event Listeners
+        submitScoreBtn.addEventListener('click', submitScore);
+
+        // Initial load of the leaderboard when the page loads
+        document.addEventListener('DOMContentLoaded', loadLeaderboard);
+    </script>
+</body>
+</html>
