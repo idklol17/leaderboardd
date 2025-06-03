@@ -106,6 +106,80 @@
             100% { transform: scale(1.02); }
         }
 
+        /* Upgrade Section Styles */
+        .upgrade-section {
+            margin-top: 30px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        .upgrade-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #eef;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .upgrade-item button {
+            background: linear-gradient(45deg, #f39c12 0%, #e67e22 100%); /* Orange gradient */
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            font-size: 1em;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .upgrade-item button:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .upgrade-item button:active:not(:disabled) {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .upgrade-item button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            opacity: 0.7;
+            box-shadow: none;
+        }
+
+        .upgrade-info {
+            text-align: left;
+            margin-right: 15px;
+            color: #444;
+        }
+
+        .upgrade-info h3 {
+            margin: 0 0 5px 0;
+            font-size: 1.2em;
+            color: #333;
+        }
+
+        .upgrade-info p {
+            margin: 0;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .cost-display {
+            font-weight: bold;
+            color: #c0392b; /* Red for cost */
+            font-size: 1.1em;
+        }
+
+
+        /* Score Submission Section */
         .input-group {
             margin-top: 30px; /* Space above name input */
             margin-bottom: 15px;
@@ -250,6 +324,17 @@
                 padding: 10px 20px;
                 font-size: 1em;
             }
+            .upgrade-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .upgrade-item button {
+                margin-top: 10px;
+                width: 100%;
+            }
+            .upgrade-info {
+                margin-right: 0;
+            }
             #leaderboard li {
                 font-size: 1em;
                 padding: 12px;
@@ -269,6 +354,21 @@
             <h2>Your Game</h2>
             <div id="scoreDisplay" class="score-display">0</div>
             <button id="clickButton">CLICK ME!</button>
+
+            <div class="upgrade-section">
+                <h2>Upgrades</h2>
+                <div class="upgrade-item">
+                    <div class="upgrade-info">
+                        <h3>Click Power</h3>
+                        <p>Increase points per click by <span id="clicksPerClickIncreaseAmount">1</span></p>
+                        <p>Current: <span id="currentClicksPerClick">1</span> per click</p>
+                    </div>
+                    <div>
+                        Cost: <span id="upgradeCostDisplay" class="cost-display">100</span>
+                        <button id="buyClickUpgradeBtn">BUY</button>
+                    </div>
+                </div>
+                </div>
 
             <div class="input-group">
                 <label for="playerName">Your Name:</label>
@@ -317,12 +417,22 @@
         const localMessageDisplay = document.getElementById('localMessage'); // For local messages
         const globalMessageBox = document.getElementById('globalMessageBox'); // For global pop-up messages
 
+        // Upgrade DOM Elements
+        const buyClickUpgradeBtn = document.getElementById('buyClickUpgradeBtn');
+        const upgradeCostDisplay = document.getElementById('upgradeCostDisplay');
+        const clicksPerClickIncreaseAmount = document.getElementById('clicksPerClickIncreaseAmount');
+        const currentClicksPerClickDisplay = document.getElementById('currentClicksPerClick');
+
         // Leaderboard DOM Elements
         const leaderboardList = document.getElementById('leaderboard');
 
         // Game State
         let score = 0;
-        const clicksPerClick = 1;
+        let clicksPerClick = 1;
+
+        // Upgrade State
+        let clickUpgradeCost = 100;
+        const clickUpgradeIncrease = 1; // Amount clicksPerClick increases by per upgrade
 
         // Function to display temporary messages to the user (global message box)
         function showGlobalMessage(message, duration = 2000) {
@@ -345,10 +455,41 @@
             }, duration);
         }
 
-        // --- Clicker Game Logic ---
+        // --- Game Logic ---
         function handleClick() {
             score += clicksPerClick;
             scoreDisplay.textContent = score;
+            checkUpgradeButtonState(); // Check if upgrades are affordable after each click
+        }
+
+        // --- Upgrade Logic ---
+        function buyClickUpgrade() {
+            if (score >= clickUpgradeCost) {
+                score -= clickUpgradeCost;
+                clicksPerClick += clickUpgradeIncrease;
+                clickUpgradeCost = Math.ceil(clickUpgradeCost * 1.5); // Increase cost for next upgrade (e.g., 50% more)
+
+                scoreDisplay.textContent = score; // Update score display
+                updateUpgradeDisplay(); // Update upgrade cost and info
+                checkUpgradeButtonState(); // Check button state
+                showGlobalMessage(`Click Power upgraded! Now +${clicksPerClick} per click!`, 3000);
+            } else {
+                showGlobalMessage("Not enough clicks to buy this upgrade!", 2000);
+            }
+        }
+
+        function updateUpgradeDisplay() {
+            upgradeCostDisplay.textContent = clickUpgradeCost;
+            clicksPerClickIncreaseAmount.textContent = clickUpgradeIncrease;
+            currentClicksPerClickDisplay.textContent = clicksPerClick;
+        }
+
+        function checkUpgradeButtonState() {
+            if (score >= clickUpgradeCost) {
+                buyClickUpgradeBtn.disabled = false;
+            } else {
+                buyClickUpgradeBtn.disabled = true;
+            }
         }
 
         // --- Firebase Submission Logic ---
@@ -382,8 +523,12 @@
 
                 showLocalMessage("Score submitted successfully!", "green");
                 playerNameInput.value = ''; // Clear name input
-                score = 0; // Reset score after submission (optional, but common for clickers)
+                score = 0; // Reset score after submission
+                clicksPerClick = 1; // Reset clicks per click
+                clickUpgradeCost = 100; // Reset upgrade cost
                 scoreDisplay.textContent = score;
+                updateUpgradeDisplay(); // Update upgrade display after reset
+                checkUpgradeButtonState(); // Update button state after reset
                 showGlobalMessage("Score submitted! Leaderboard updating...", 4000);
                 loadLeaderboard(); // Refresh the leaderboard after submission
 
@@ -398,8 +543,6 @@
 
         // --- Leaderboard Logic ---
         function loadLeaderboard() {
-            // Fetch all scores without server-side ordering to avoid index errors.
-            // Sorting and limiting will be done client-side.
             db.collection("scores")
               .onSnapshot((snapshot) => { // Listen for real-time updates
                   leaderboardList.innerHTML = ''; // Clear existing list
@@ -408,29 +551,22 @@
                       return;
                   }
 
-                  // Convert snapshot to an array of data objects
                   const allScores = [];
                   snapshot.forEach((doc) => {
                       allScores.push(doc.data());
                   });
 
-                  // Sort the scores client-side
                   allScores.sort((a, b) => {
-                      // Primary sort: by score in descending order
                       if (b.score !== a.score) {
                           return b.score - a.score;
                       }
-                      // Secondary sort: by timestamp in descending order (most recent first for ties)
-                      // Ensure timestamp exists before comparing, handle null/undefined
                       const timestampA = a.timestamp ? a.timestamp.toDate().getTime() : 0;
                       const timestampB = b.timestamp ? b.timestamp.toDate().getTime() : 0;
                       return timestampB - timestampA;
                   });
 
-                  // Take only the top 10 scores
                   const topScores = allScores.slice(0, 10);
 
-                  // Display the sorted and limited scores
                   topScores.forEach((data) => {
                       const listItem = document.createElement('li');
                       listItem.innerHTML = `<span>${data.name}</span><strong>${data.score}</strong>`;
@@ -445,13 +581,16 @@
 
         // --- Event Listeners ---
         clickButton.addEventListener('click', handleClick);
+        buyClickUpgradeBtn.addEventListener('click', buyClickUpgrade);
         submitScoreBtn.addEventListener('click', submitScoreToLeaderboard);
 
         // Initial setup on page load
         document.addEventListener('DOMContentLoaded', () => {
             scoreDisplay.textContent = score; // Display initial score
+            updateUpgradeDisplay(); // Display initial upgrade info
+            checkUpgradeButtonState(); // Set initial button state
             loadLeaderboard(); // Load the leaderboard
-            showGlobalMessage("Welcome! Click to earn points and submit your score!", 3000);
+            showGlobalMessage("Welcome! Click to earn points and upgrade your power!", 3000);
         });
     </script>
 </body>
